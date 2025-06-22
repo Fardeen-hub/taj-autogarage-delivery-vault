@@ -4,6 +4,7 @@ export interface DeliveryRecord {
   bikeNumber: string;
   chassisNumber: string;
   bikeModel: string;
+  bikeDetails: string;
   registrationDate: string;
   buyerName: string;
   buyerMobile: string;

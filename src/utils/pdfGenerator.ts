@@ -97,6 +97,13 @@ export const generatePDF = async (record: DeliveryRecord): Promise<void> => {
           font-size: 12px;
           color: #666;
         }
+        .bike-details {
+          margin-top: 10px;
+          padding: 10px;
+          background: #f9f9f9;
+          border-radius: 4px;
+          border-left: 3px solid #2563eb;
+        }
         @media print {
           body { margin: 0; }
           .no-print { display: none; }
@@ -128,6 +135,12 @@ export const generatePDF = async (record: DeliveryRecord): Promise<void> => {
           <span class="label">Registration Date:</span>
           <span class="value">${record.registrationDate || 'Not specified'}</span>
         </div>
+        ${record.bikeDetails ? `
+        <div class="bike-details">
+          <div class="label" style="margin-bottom: 5px;">Bike Details:</div>
+          <div class="value">${record.bikeDetails.replace(/\n/g, '<br>')}</div>
+        </div>
+        ` : ''}
       </div>
 
       <div class="section">

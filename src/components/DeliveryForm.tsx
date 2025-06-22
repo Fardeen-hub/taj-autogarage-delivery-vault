@@ -17,6 +17,7 @@ const DeliveryForm = () => {
     bikeNumber: '',
     chassisNumber: '',
     bikeModel: '',
+    bikeDetails: '',
     registrationDate: '',
     buyerName: '',
     buyerMobile: '',
@@ -103,6 +104,7 @@ const DeliveryForm = () => {
         bikeNumber: '',
         chassisNumber: '',
         bikeModel: '',
+        bikeDetails: '',
         registrationDate: '',
         buyerName: '',
         buyerMobile: '',
@@ -133,68 +135,81 @@ const DeliveryForm = () => {
           <CardHeader>
             <CardTitle>Bike Information</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="bikeNumber">Bike Number *</Label>
-              <Input
-                id="bikeNumber"
-                name="bikeNumber"
-                value={formData.bikeNumber}
-                onChange={handleInputChange}
-                placeholder="KA01AB1234"
-                required
-              />
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="bikeNumber">Bike Number *</Label>
+                <Input
+                  id="bikeNumber"
+                  name="bikeNumber"
+                  value={formData.bikeNumber}
+                  onChange={handleInputChange}
+                  placeholder="KA01AB1234"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="chassisNumber">Chassis Number</Label>
+                <Input
+                  id="chassisNumber"
+                  name="chassisNumber"
+                  value={formData.chassisNumber}
+                  onChange={handleInputChange}
+                  placeholder="Enter chassis number"
+                />
+              </div>
+              <div>
+                <Label htmlFor="bikeModel">Bike Model</Label>
+                <Input
+                  id="bikeModel"
+                  name="bikeModel"
+                  value={formData.bikeModel}
+                  onChange={handleInputChange}
+                  placeholder="Honda Activa, Bajaj Pulsar, etc."
+                />
+              </div>
+              <div>
+                <Label htmlFor="registrationDate">Registration Date</Label>
+                <Input
+                  id="registrationDate"
+                  name="registrationDate"
+                  type="date"
+                  value={formData.registrationDate}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div>
+                <Label htmlFor="sellAmount">Sell Amount *</Label>
+                <Input
+                  id="sellAmount"
+                  name="sellAmount"
+                  type="number"
+                  value={formData.sellAmount}
+                  onChange={handleInputChange}
+                  placeholder="85000"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="saleDate">Sale Date</Label>
+                <Input
+                  id="saleDate"
+                  name="saleDate"
+                  type="date"
+                  value={formData.saleDate}
+                  onChange={handleInputChange}
+                />
+              </div>
             </div>
             <div>
-              <Label htmlFor="chassisNumber">Chassis Number</Label>
-              <Input
-                id="chassisNumber"
-                name="chassisNumber"
-                value={formData.chassisNumber}
+              <Label htmlFor="bikeDetails">Bike Details</Label>
+              <Textarea
+                id="bikeDetails"
+                name="bikeDetails"
+                value={formData.bikeDetails}
                 onChange={handleInputChange}
-                placeholder="Enter chassis number"
-              />
-            </div>
-            <div>
-              <Label htmlFor="bikeModel">Bike Model</Label>
-              <Input
-                id="bikeModel"
-                name="bikeModel"
-                value={formData.bikeModel}
-                onChange={handleInputChange}
-                placeholder="Honda Activa, Bajaj Pulsar, etc."
-              />
-            </div>
-            <div>
-              <Label htmlFor="registrationDate">Registration Date</Label>
-              <Input
-                id="registrationDate"
-                name="registrationDate"
-                type="date"
-                value={formData.registrationDate}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div>
-              <Label htmlFor="sellAmount">Sell Amount *</Label>
-              <Input
-                id="sellAmount"
-                name="sellAmount"
-                type="number"
-                value={formData.sellAmount}
-                onChange={handleInputChange}
-                placeholder="85000"
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="saleDate">Sale Date</Label>
-              <Input
-                id="saleDate"
-                name="saleDate"
-                type="date"
-                value={formData.saleDate}
-                onChange={handleInputChange}
+                placeholder="Enter additional bike details, condition, features, modifications, etc."
+                rows={4}
               />
             </div>
           </CardContent>

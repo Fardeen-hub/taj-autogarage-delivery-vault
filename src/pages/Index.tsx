@@ -55,7 +55,9 @@ const AppContent = () => {
 const Index = () => {
   return (
     <AuthProvider>
-      <AppContent />
+      <Router>
+        <AppContent />
+      </Router>
     </AuthProvider>
   );
 };

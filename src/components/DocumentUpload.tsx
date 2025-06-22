@@ -1,9 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Upload } from 'lucide-react';
+import { Upload, Camera } from 'lucide-react';
 
 interface DocumentUploadProps {
   onDocumentsChange: (documents: {[key: string]: string}) => void;
@@ -11,6 +11,8 @@ interface DocumentUploadProps {
 
 const DocumentUpload: React.FC<DocumentUploadProps> = ({ onDocumentsChange }) => {
   const [documents, setDocuments] = useState<{[key: string]: string}>({});
+  const fileInputRefs = useRef<{[key: string]: HTMLInputElement | null}>({});
+  const cameraInputRefs = useRef<{[key: string]: HTMLInputElement | null}>({});
 
   const documentTypes = [
     { key: 'insurance', label: 'Insurance Document', required: true },
@@ -34,6 +36,18 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onDocumentsChange }) =>
     }
   };
 
+  const handleCameraCapture = (key: string) => {
+    if (cameraInputRefs.current[key]) {
+      cameraInputRefs.current[key]?.click();
+    }
+  };
+
+  const handleFileSelect = (key: string) => {
+    if (fileInputRefs.current[key]) {
+      fileInputRefs.current[key]?.click();
+    }
+  };
+
   return (
     <div className="space-y-4">
       <p className="text-sm text-gray-600 mb-4">
@@ -48,9 +62,9 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onDocumentsChange }) =>
               {docType.required && <Badge variant="destructive" className="text-xs">Required</Badge>}
             </Label>
             
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 space-y-3">
               {documents[docType.key] ? (
-                <div className="space-y-2">
+                <div className="space-y-2 text-center">
                   <Badge variant="secondary">Document Uploaded</Badge>
                   <div>
                     <img
@@ -61,17 +75,53 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onDocumentsChange }) =>
                   </div>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2 text-center">
                   <Upload className="w-8 h-8 mx-auto text-gray-400" />
-                  <p className="text-sm text-gray-500">Click to upload</p>
+                  <p className="text-sm text-gray-500">Upload document</p>
                 </div>
               )}
               
+              <div className="flex gap-2 justify-center">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleCameraCapture(docType.key)}
+                  className="flex items-center space-x-1"
+                >
+                  <Camera className="w-4 h-4" />
+                  <span>Camera</span>
+                </Button>
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleFileSelect(docType.key)}
+                  className="flex items-center space-x-1"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span>Gallery</span>
+                </Button>
+              </div>
+              
+              {/* Camera input for each document type */}
               <input
+                ref={(el) => (cameraInputRefs.current[docType.key] = el)}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={(e) => handleFileUpload(docType.key, e)}
+                className="hidden"
+              />
+              
+              {/* File input for gallery selection */}
+              <input
+                ref={(el) => (fileInputRefs.current[docType.key] = el)}
                 type="file"
                 accept="image/*,.pdf"
                 onChange={(e) => handleFileUpload(docType.key, e)}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                className="hidden"
               />
             </div>
           </div>

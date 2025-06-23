@@ -12,6 +12,7 @@ const AdminLogin = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { sendOTP, verifyOTP } = useAuth();
   const navigate = useNavigate();
 
@@ -27,18 +28,32 @@ const AdminLogin = () => {
       return;
     }
 
-    if (sendOTP(phoneNumber)) {
-      setOtpSent(true);
-      toast({
-        title: "OTP Sent",
-        description: "Please check your phone for the OTP",
-      });
-    } else {
+    setIsLoading(true);
+    
+    try {
+      const success = await sendOTP(phoneNumber);
+      
+      if (success) {
+        setOtpSent(true);
+        toast({
+          title: "OTP Sent",
+          description: "Please check your phone for the OTP",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to send OTP. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
         title: "Error",
         description: "Failed to send OTP. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -54,27 +69,61 @@ const AdminLogin = () => {
       return;
     }
 
-    if (verifyOTP(phoneNumber, otp)) {
+    setIsLoading(true);
+    
+    try {
+      const success = await verifyOTP(phoneNumber, otp);
+      
+      if (success) {
+        toast({
+          title: "Login Successful",
+          description: "Welcome to Taj Autogarage System",
+        });
+        navigate('/');
+      } else {
+        toast({
+          title: "Login Failed",
+          description: "Invalid OTP. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
-        title: "Login Successful",
-        description: "Welcome to Taj Autogarage System",
-      });
-      navigate('/');
-    } else {
-      toast({
-        title: "Login Failed",
-        description: "Invalid OTP. Please try again.",
+        title: "Error",
+        description: "Failed to verify OTP. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleResendOTP = () => {
-    if (sendOTP(phoneNumber)) {
+  const handleResendOTP = async () => {
+    setIsLoading(true);
+    
+    try {
+      const success = await sendOTP(phoneNumber);
+      
+      if (success) {
+        toast({
+          title: "OTP Resent",
+          description: "New OTP has been sent to your phone",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to resend OTP. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
-        title: "OTP Resent",
-        description: "New OTP has been sent to your phone",
+        title: "Error",
+        description: "Failed to resend OTP. Please try again.",
+        variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -102,10 +151,15 @@ const AdminLogin = () => {
                   required
                   className="w-full"
                   maxLength={10}
+                  disabled={isLoading}
                 />
               </div>
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
-                Send OTP
+              <Button 
+                type="submit" 
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Sending...' : 'Send OTP'}
               </Button>
             </form>
           ) : (
@@ -119,6 +173,7 @@ const AdminLogin = () => {
                     maxLength={6}
                     value={otp}
                     onChange={(value) => setOtp(value)}
+                    disabled={isLoading}
                   >
                     <InputOTPGroup>
                       <InputOTPSlot index={0} />
@@ -131,8 +186,12 @@ const AdminLogin = () => {
                   </InputOTP>
                 </div>
               </div>
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
-                Verify OTP
+              <Button 
+                type="submit" 
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Verifying...' : 'Verify OTP'}
               </Button>
               <div className="flex justify-between text-sm">
                 <Button
@@ -140,6 +199,7 @@ const AdminLogin = () => {
                   variant="ghost"
                   onClick={() => setOtpSent(false)}
                   className="text-blue-600"
+                  disabled={isLoading}
                 >
                   Change Number
                 </Button>
@@ -148,8 +208,9 @@ const AdminLogin = () => {
                   variant="ghost"
                   onClick={handleResendOTP}
                   className="text-blue-600"
+                  disabled={isLoading}
                 >
-                  Resend OTP
+                  {isLoading ? 'Sending...' : 'Resend OTP'}
                 </Button>
               </div>
             </form>

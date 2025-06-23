@@ -1,11 +1,13 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  sendOTP: (phoneNumber: string) => boolean;
-  verifyOTP: (phoneNumber: string, otp: string) => boolean;
+  sendOTP: (phoneNumber: string) => Promise<boolean>;
+  verifyOTP: (phoneNumber: string, otp: string) => Promise<boolean>;
   logout: () => void;
+  sendWhatsAppNotification: (phoneNumber: string, bikeNumber: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,50 +22,113 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [generatedOTP, setGeneratedOTP] = useState<string>('');
-  const [otpPhoneNumber, setOtpPhoneNumber] = useState<string>('');
 
   useEffect(() => {
-    const authStatus = localStorage.getItem('tajAutogarageAuth');
-    if (authStatus === 'true') {
-      setIsAuthenticated(true);
-    }
+    // Check if user is already authenticated
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setIsAuthenticated(true);
+      }
+    };
+    checkAuth();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        setIsAuthenticated(true);
+      } else if (event === 'SIGNED_OUT') {
+        setIsAuthenticated(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const sendOTP = (phoneNumber: string) => {
-    // Generate a 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    setGeneratedOTP(otp);
-    setOtpPhoneNumber(phoneNumber);
-    
-    // In a real app, you would send this OTP via SMS
-    console.log(`OTP for ${phoneNumber}: ${otp}`);
-    alert(`Your OTP is: ${otp} (In production, this would be sent via SMS)`);
-    
-    return true;
-  };
+  const sendOTP = async (phoneNumber: string): Promise<boolean> => {
+    try {
+      // Format phone number with country code if not present
+      const formattedPhone = phoneNumber.startsWith('+') ? phoneNumber : `+91${phoneNumber}`;
+      
+      const { error } = await supabase.auth.signInWithOtp({
+        phone: formattedPhone,
+      });
 
-  const verifyOTP = (phoneNumber: string, otp: string) => {
-    if (phoneNumber === otpPhoneNumber && otp === generatedOTP) {
-      setIsAuthenticated(true);
-      localStorage.setItem('tajAutogarageAuth', 'true');
-      // Clear OTP data after successful verification
-      setGeneratedOTP('');
-      setOtpPhoneNumber('');
+      if (error) {
+        console.error('Error sending OTP:', error);
+        return false;
+      }
+      
+      console.log(`OTP sent to ${formattedPhone}`);
       return true;
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+      return false;
     }
-    return false;
   };
 
-  const logout = () => {
+  const verifyOTP = async (phoneNumber: string, otp: string): Promise<boolean> => {
+    try {
+      const formattedPhone = phoneNumber.startsWith('+') ? phoneNumber : `+91${phoneNumber}`;
+      
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone: formattedPhone,
+        token: otp,
+        type: 'sms'
+      });
+
+      if (error) {
+        console.error('Error verifying OTP:', error);
+        return false;
+      }
+
+      if (data.session) {
+        setIsAuthenticated(true);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error verifying OTP:', error);
+      return false;
+    }
+  };
+
+  const sendWhatsAppNotification = async (phoneNumber: string, bikeNumber: string): Promise<boolean> => {
+    try {
+      // Call Supabase Edge Function for WhatsApp notification
+      const { data, error } = await supabase.functions.invoke('send-whatsapp', {
+        body: {
+          to: phoneNumber,
+          message: `Your RC card for bike number ${bikeNumber} has been renewed and is ready for pickup at Taj Autogarage.`,
+        },
+      });
+
+      if (error) {
+        console.error('Error sending WhatsApp notification:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error sending WhatsApp notification:', error);
+      return false;
+    }
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
     setIsAuthenticated(false);
-    localStorage.removeItem('tajAutogarageAuth');
-    setGeneratedOTP('');
-    setOtpPhoneNumber('');
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, sendOTP, verifyOTP, logout }}>
+    <AuthContext.Provider value={{ 
+      isAuthenticated, 
+      sendOTP, 
+      verifyOTP, 
+      logout, 
+      sendWhatsAppNotification 
+    }}>
       {children}
     </AuthContext.Provider>
   );

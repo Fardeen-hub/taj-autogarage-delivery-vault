@@ -3,7 +3,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (username: string, password: string) => boolean;
+  sendOTP: (phoneNumber: string) => boolean;
+  verifyOTP: (phoneNumber: string, otp: string) => boolean;
   logout: () => void;
 }
 
@@ -19,6 +20,8 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [generatedOTP, setGeneratedOTP] = useState<string>('');
+  const [otpPhoneNumber, setOtpPhoneNumber] = useState<string>('');
 
   useEffect(() => {
     const authStatus = localStorage.getItem('tajAutogarageAuth');
@@ -27,11 +30,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
-  const login = (username: string, password: string) => {
-    // Simple authentication - in real app, this would be server-side
-    if (username === 'admin' && password === 'tajgarage2024') {
+  const sendOTP = (phoneNumber: string) => {
+    // Generate a 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedOTP(otp);
+    setOtpPhoneNumber(phoneNumber);
+    
+    // In a real app, you would send this OTP via SMS
+    console.log(`OTP for ${phoneNumber}: ${otp}`);
+    alert(`Your OTP is: ${otp} (In production, this would be sent via SMS)`);
+    
+    return true;
+  };
+
+  const verifyOTP = (phoneNumber: string, otp: string) => {
+    if (phoneNumber === otpPhoneNumber && otp === generatedOTP) {
       setIsAuthenticated(true);
       localStorage.setItem('tajAutogarageAuth', 'true');
+      // Clear OTP data after successful verification
+      setGeneratedOTP('');
+      setOtpPhoneNumber('');
       return true;
     }
     return false;
@@ -40,10 +58,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem('tajAutogarageAuth');
+    setGeneratedOTP('');
+    setOtpPhoneNumber('');
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, sendOTP, verifyOTP, logout }}>
       {children}
     </AuthContext.Provider>
   );

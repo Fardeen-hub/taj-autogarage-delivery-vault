@@ -5,18 +5,56 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { toast } from '@/hooks/use-toast';
 
 const AdminLogin = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const { login } = useAuth();
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const { sendOTP, verifyOTP } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (login(username, password)) {
+    if (phoneNumber.length < 10) {
+      toast({
+        title: "Invalid Phone Number",
+        description: "Please enter a valid phone number",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (sendOTP(phoneNumber)) {
+      setOtpSent(true);
+      toast({
+        title: "OTP Sent",
+        description: "Please check your phone for the OTP",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to send OTP. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (otp.length !== 6) {
+      toast({
+        title: "Invalid OTP",
+        description: "Please enter a 6-digit OTP",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (verifyOTP(phoneNumber, otp)) {
       toast({
         title: "Login Successful",
         description: "Welcome to Taj Autogarage System",
@@ -25,8 +63,17 @@ const AdminLogin = () => {
     } else {
       toast({
         title: "Login Failed",
-        description: "Invalid credentials. Please try again.",
+        description: "Invalid OTP. Please try again.",
         variant: "destructive",
+      });
+    }
+  };
+
+  const handleResendOTP = () => {
+    if (sendOTP(phoneNumber)) {
+      toast({
+        title: "OTP Resent",
+        description: "New OTP has been sent to your phone",
       });
     }
   };
@@ -39,37 +86,74 @@ const AdminLogin = () => {
             <span className="text-white font-bold text-2xl">TA</span>
           </div>
           <CardTitle className="text-2xl font-bold text-blue-900">Taj Autogarage</CardTitle>
-          <p className="text-gray-600">Delivery System Login</p>
+          <p className="text-gray-600">
+            {otpSent ? 'Enter OTP to Login' : 'Enter Phone Number to Login'}
+          </p>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Input
-                type="text"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                className="w-full"
-              />
-            </div>
-            <div>
-              <Input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full"
-              />
-            </div>
-            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
-              Login
-            </Button>
-          </form>
-          <div className="mt-4 text-sm text-gray-500 text-center">
-            Demo credentials: admin / tajgarage2024
-          </div>
+          {!otpSent ? (
+            <form onSubmit={handleSendOTP} className="space-y-4">
+              <div>
+                <Input
+                  type="tel"
+                  placeholder="Enter your phone number"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  required
+                  className="w-full"
+                  maxLength={10}
+                />
+              </div>
+              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
+                Send OTP
+              </Button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOTP} className="space-y-4">
+              <div className="text-center">
+                <p className="text-sm text-gray-600 mb-4">
+                  OTP sent to: {phoneNumber}
+                </p>
+                <div className="flex justify-center">
+                  <InputOTP
+                    maxLength={6}
+                    value={otp}
+                    onChange={(value) => setOtp(value)}
+                  >
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
+                </div>
+              </div>
+              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
+                Verify OTP
+              </Button>
+              <div className="flex justify-between text-sm">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setOtpSent(false)}
+                  className="text-blue-600"
+                >
+                  Change Number
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleResendOTP}
+                  className="text-blue-600"
+                >
+                  Resend OTP
+                </Button>
+              </div>
+            </form>
+          )}
         </CardContent>
       </Card>
     </div>

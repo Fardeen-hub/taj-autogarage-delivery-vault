@@ -8,8 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { saveDeliveryRecord, DeliveryRecord } from '@/utils/storage';
 import { generatePDF } from '@/utils/pdfGenerator';
-import { Camera, Upload, Signature } from 'lucide-react';
-import SignatureCanvas from '@/components/SignatureCanvas';
+import { Camera } from 'lucide-react';
 import DocumentUpload from '@/components/DocumentUpload';
 
 const DeliveryForm = () => {
@@ -27,7 +26,6 @@ const DeliveryForm = () => {
   });
 
   const [buyerPhoto, setBuyerPhoto] = useState<string>('');
-  const [signature, setSignature] = useState<string>('');
   const [documents, setDocuments] = useState<{[key: string]: string}>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -69,22 +67,13 @@ const DeliveryForm = () => {
       return;
     }
 
-    if (!signature) {
-      toast({
-        title: "Missing Signature",
-        description: "Please provide buyer's signature.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       const record: DeliveryRecord = {
         id: Date.now().toString(),
         ...formData,
         sellAmount: parseFloat(formData.sellAmount),
         buyerPhoto,
-        signature,
+        signature: '', // No signature required
         documents,
         createdAt: new Date().toISOString(),
       };
@@ -113,7 +102,6 @@ const DeliveryForm = () => {
         saleDate: new Date().toISOString().split('T')[0],
       });
       setBuyerPhoto('');
-      setSignature('');
       setDocuments({});
 
     } catch (error) {
@@ -293,16 +281,6 @@ const DeliveryForm = () => {
                 </div>
               )}
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Signature */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Digital Signature *</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <SignatureCanvas onSignatureChange={setSignature} />
           </CardContent>
         </Card>
 

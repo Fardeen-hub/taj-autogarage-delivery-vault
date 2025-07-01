@@ -5,7 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import Dashboard from '@/components/Dashboard';
 import DeliveryForm from '@/components/DeliveryForm';
 import SearchRecords from '@/components/SearchRecords';
-import AdminLogin from '@/components/AdminLogin';
+import AuthForm from '@/components/AuthForm';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import Navigation from '@/components/Navigation';
 
@@ -21,7 +21,7 @@ const AppContent = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {isAuthenticated && <Navigation />}
       <Routes>
-        <Route path="/login" element={<AdminLogin />} />
+        <Route path="/login" element={<AuthForm />} />
         <Route 
           path="/" 
           element={

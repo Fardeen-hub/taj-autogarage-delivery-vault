@@ -1,10 +1,14 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { User } from '@supabase/supabase-js';
 
 interface AuthContextType {
+  user: User | null;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signup: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
   sendWhatsAppNotification: (phoneNumber: string, bikeNumber: string) => Promise<boolean>;
 }
 
@@ -19,31 +23,71 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Check if user is already authenticated from localStorage
-    const authStatus = localStorage.getItem('isAuthenticated');
-    if (authStatus === 'true') {
-      setIsAuthenticated(true);
-    }
+    // Get initial session
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+      setIsAuthenticated(!!session?.user);
+    };
+
+    getSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setUser(session?.user ?? null);
+        setIsAuthenticated(!!session?.user);
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const signup = async (email: string, password: string) => {
     try {
-      // Simple authentication - you can change these credentials
-      if (username === 'admin' && password === 'tajgarage123') {
-        setIsAuthenticated(true);
-        localStorage.setItem('isAuthenticated', 'true');
-        console.log('Login successful');
-        return true;
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
       }
-      
-      console.log('Invalid credentials');
-      return false;
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error during signup:', error);
+      return { success: false, error: 'An unexpected error occurred' };
+    }
+  };
+
+  const login = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
     } catch (error) {
       console.error('Error during login:', error);
-      return false;
+      return { success: false, error: 'An unexpected error occurred' };
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Error during logout:', error);
     }
   };
 
@@ -58,15 +102,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const logout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem('isAuthenticated');
-  };
-
   return (
     <AuthContext.Provider value={{ 
+      user,
       isAuthenticated, 
       login, 
+      signup,
       logout, 
       sendWhatsAppNotification 
     }}>

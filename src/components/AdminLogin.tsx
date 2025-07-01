@@ -5,24 +5,22 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { toast } from '@/hooks/use-toast';
 
 const AdminLogin = () => {
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [otp, setOtp] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { sendOTP, verifyOTP } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSendOTP = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (phoneNumber.length < 10) {
+    if (!username || !password) {
       toast({
-        title: "Invalid Phone Number",
-        description: "Please enter a valid phone number",
+        title: "Missing Information",
+        description: "Please enter both username and password",
         variant: "destructive",
       });
       return;
@@ -31,48 +29,7 @@ const AdminLogin = () => {
     setIsLoading(true);
     
     try {
-      const success = await sendOTP(phoneNumber);
-      
-      if (success) {
-        setOtpSent(true);
-        toast({
-          title: "OTP Sent",
-          description: "Please check your phone for the OTP",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to send OTP. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to send OTP. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleVerifyOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (otp.length !== 6) {
-      toast({
-        title: "Invalid OTP",
-        description: "Please enter a 6-digit OTP",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    
-    try {
-      const success = await verifyOTP(phoneNumber, otp);
+      const success = await login(username, password);
       
       if (success) {
         toast({
@@ -83,43 +40,14 @@ const AdminLogin = () => {
       } else {
         toast({
           title: "Login Failed",
-          description: "Invalid OTP. Please try again.",
+          description: "Invalid username or password. Please try again.",
           variant: "destructive",
         });
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to verify OTP. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleResendOTP = async () => {
-    setIsLoading(true);
-    
-    try {
-      const success = await sendOTP(phoneNumber);
-      
-      if (success) {
-        toast({
-          title: "OTP Resent",
-          description: "New OTP has been sent to your phone",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to resend OTP. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to resend OTP. Please try again.",
+        description: "Failed to login. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -135,86 +63,48 @@ const AdminLogin = () => {
             <span className="text-white font-bold text-2xl">TA</span>
           </div>
           <CardTitle className="text-2xl font-bold text-blue-900">Taj Autogarage</CardTitle>
-          <p className="text-gray-600">
-            {otpSent ? 'Enter OTP to Login' : 'Enter Phone Number to Login'}
+          <p className="text-gray-600 text-sm mt-2">
+            Professional Vehicle Service & RC Renewal Management
+          </p>
+          <p className="text-gray-500 text-xs mt-1">
+            Your trusted partner for bike servicing and document renewal
           </p>
         </CardHeader>
         <CardContent>
-          {!otpSent ? (
-            <form onSubmit={handleSendOTP} className="space-y-4">
-              <div>
-                <Input
-                  type="tel"
-                  placeholder="Enter your phone number"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  required
-                  className="w-full"
-                  maxLength={10}
-                  disabled={isLoading}
-                />
-              </div>
-              <Button 
-                type="submit" 
-                className="w-full bg-blue-600 hover:bg-blue-700"
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <Input
+                type="text"
+                placeholder="Enter username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                className="w-full"
                 disabled={isLoading}
-              >
-                {isLoading ? 'Sending...' : 'Send OTP'}
-              </Button>
-            </form>
-          ) : (
-            <form onSubmit={handleVerifyOTP} className="space-y-4">
-              <div className="text-center">
-                <p className="text-sm text-gray-600 mb-4">
-                  OTP sent to: {phoneNumber}
-                </p>
-                <div className="flex justify-center">
-                  <InputOTP
-                    maxLength={6}
-                    value={otp}
-                    onChange={(value) => setOtp(value)}
-                    disabled={isLoading}
-                  >
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                      <InputOTPSlot index={3} />
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
-                    </InputOTPGroup>
-                  </InputOTP>
-                </div>
-              </div>
-              <Button 
-                type="submit" 
-                className="w-full bg-blue-600 hover:bg-blue-700"
+              />
+            </div>
+            <div>
+              <Input
+                type="password"
+                placeholder="Enter password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full"
                 disabled={isLoading}
-              >
-                {isLoading ? 'Verifying...' : 'Verify OTP'}
-              </Button>
-              <div className="flex justify-between text-sm">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setOtpSent(false)}
-                  className="text-blue-600"
-                  disabled={isLoading}
-                >
-                  Change Number
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={handleResendOTP}
-                  className="text-blue-600"
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Sending...' : 'Resend OTP'}
-                </Button>
-              </div>
-            </form>
-          )}
+              />
+            </div>
+            <Button 
+              type="submit" 
+              className="w-full bg-blue-600 hover:bg-blue-700"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Logging in...' : 'Login to Dashboard'}
+            </Button>
+          </form>
+          <div className="mt-4 text-center text-xs text-gray-500">
+            <p>Default credentials: admin / tajgarage123</p>
+          </div>
         </CardContent>
       </Card>
     </div>

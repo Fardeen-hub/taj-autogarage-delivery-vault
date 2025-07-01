@@ -1,26 +1,37 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
-import { getDeliveryRecords, DeliveryRecord } from '@/utils/storage';
+import { getDeliveryRecords, DeliveryRecord } from '@/utils/supabaseStorage';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Dashboard = () => {
   const [records, setRecords] = useState<DeliveryRecord[]>([]);
   const [filteredRecords, setFilteredRecords] = useState<DeliveryRecord[]>([]);
   const [selectedDate, setSelectedDate] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
-    const loadRecords = () => {
-      const allRecords = getDeliveryRecords();
-      setRecords(allRecords);
-      setFilteredRecords(allRecords);
+    const loadRecords = async () => {
+      if (!user) return;
+      
+      setIsLoading(true);
+      try {
+        const allRecords = await getDeliveryRecords();
+        setRecords(allRecords);
+        setFilteredRecords(allRecords);
+      } catch (error) {
+        console.error('Error loading records:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     loadRecords();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (selectedDate) {
@@ -38,6 +49,14 @@ const Dashboard = () => {
   );
 
   const totalSales = filteredRecords.reduce((sum, record) => sum + record.sellAmount, 0);
+
+  if (isLoading) {
+    return (
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="text-center">Loading records...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">

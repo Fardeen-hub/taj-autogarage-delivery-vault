@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
-import { saveDeliveryRecord, DeliveryRecord } from '@/utils/storage';
+import { saveDeliveryRecord } from '@/utils/supabaseStorage';
 import { generatePDF } from '@/utils/pdfGenerator';
 import { Camera } from 'lucide-react';
 import DocumentUpload from '@/components/DocumentUpload';
@@ -27,6 +26,7 @@ const DeliveryForm = () => {
 
   const [buyerPhoto, setBuyerPhoto] = useState<string>('');
   const [documents, setDocuments] = useState<{[key: string]: string}>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -67,49 +67,73 @@ const DeliveryForm = () => {
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
-      const record: DeliveryRecord = {
-        id: Date.now().toString(),
-        ...formData,
+      const recordData = {
+        bikeNumber: formData.bikeNumber,
+        chassisNumber: formData.chassisNumber,
+        bikeModel: formData.bikeModel,
+        bikeDetails: formData.bikeDetails,
+        registrationDate: formData.registrationDate,
+        buyerName: formData.buyerName,
+        buyerMobile: formData.buyerMobile,
+        buyerAddress: formData.buyerAddress,
         sellAmount: parseFloat(formData.sellAmount),
+        saleDate: formData.saleDate,
         buyerPhoto,
-        signature: '', // No signature required
         documents,
-        createdAt: new Date().toISOString(),
       };
 
-      saveDeliveryRecord(record);
+      const result = await saveDeliveryRecord(recordData);
       
-      // Generate PDF
-      await generatePDF(record);
-      
-      toast({
-        title: "Delivery Record Saved",
-        description: "Record saved successfully and PDF generated!",
-      });
+      if (result.success) {
+        // Generate PDF with the saved record
+        const fullRecord = {
+          id: result.data.id,
+          ...recordData,
+          createdAt: new Date().toISOString(),
+        };
+        
+        await generatePDF(fullRecord);
+        
+        toast({
+          title: "Delivery Record Saved",
+          description: "Record saved successfully to database and PDF generated!",
+        });
 
-      // Reset form
-      setFormData({
-        bikeNumber: '',
-        chassisNumber: '',
-        bikeModel: '',
-        bikeDetails: '',
-        registrationDate: '',
-        buyerName: '',
-        buyerMobile: '',
-        buyerAddress: '',
-        sellAmount: '',
-        saleDate: new Date().toISOString().split('T')[0],
-      });
-      setBuyerPhoto('');
-      setDocuments({});
+        // Reset form
+        setFormData({
+          bikeNumber: '',
+          chassisNumber: '',
+          bikeModel: '',
+          bikeDetails: '',
+          registrationDate: '',
+          buyerName: '',
+          buyerMobile: '',
+          buyerAddress: '',
+          sellAmount: '',
+          saleDate: new Date().toISOString().split('T')[0],
+        });
+        setBuyerPhoto('');
+        setDocuments({});
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to save delivery record.",
+          variant: "destructive",
+        });
+      }
 
     } catch (error) {
+      console.error('Error saving record:', error);
       toast({
         title: "Error",
         description: "Failed to save delivery record.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -298,8 +322,12 @@ const DeliveryForm = () => {
           <Button type="button" variant="outline">
             Cancel
           </Button>
-          <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-            Save & Generate PDF
+          <Button 
+            type="submit" 
+            className="bg-blue-600 hover:bg-blue-700"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Saving...' : 'Save & Generate PDF'}
           </Button>
         </div>
       </form>

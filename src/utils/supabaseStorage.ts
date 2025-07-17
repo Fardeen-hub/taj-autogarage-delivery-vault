@@ -81,6 +81,8 @@ export const getDeliveryRecords = async (): Promise<DeliveryRecord[]> => {
       return [];
     }
 
+    if (!data) return [];
+
     // Transform database records to match our interface
     return data.map(record => ({
       id: record.id,
@@ -95,7 +97,7 @@ export const getDeliveryRecords = async (): Promise<DeliveryRecord[]> => {
       sellAmount: record.sell_amount,
       saleDate: record.sale_date,
       buyerPhoto: record.buyer_photo || '',
-      documents: record.documents || {},
+      documents: record.documents as {[key: string]: string} || {},
       createdAt: record.created_at,
       userId: record.user_id
     }));

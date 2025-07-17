@@ -93,6 +93,7 @@ const DeliveryForm = () => {
         const fullRecord = {
           id: result.data.id,
           createdAt: new Date().toISOString(),
+          signature: '', // Add empty signature for PDF generation
           ...recordData,
         };
         

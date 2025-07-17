@@ -17,9 +17,10 @@ export interface DeliveryRecord {
   documents: {[key: string]: string};
   createdAt: string;
   userId?: string;
+  signature?: string; // Optional field for PDF generation
 }
 
-export const saveDeliveryRecord = async (record: Omit<DeliveryRecord, 'id' | 'createdAt' | 'userId'>): Promise<{ success: boolean; error?: string; data?: any }> => {
+export const saveDeliveryRecord = async (record: Omit<DeliveryRecord, 'id' | 'createdAt' | 'userId' | 'signature'>): Promise<{ success: boolean; error?: string; data?: any }> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -27,8 +28,8 @@ export const saveDeliveryRecord = async (record: Omit<DeliveryRecord, 'id' | 'cr
       return { success: false, error: 'User not authenticated' };
     }
 
-    const { data, error } = await supabase
-      .from('delivery_records' as any)
+    const { data, error } = await (supabase as any)
+      .from('delivery_records')
       .insert([
         {
           bike_number: record.bikeNumber,
@@ -70,8 +71,8 @@ export const getDeliveryRecords = async (): Promise<DeliveryRecord[]> => {
       return [];
     }
 
-    const { data, error } = await supabase
-      .from('delivery_records' as any)
+    const { data, error } = await (supabase as any)
+      .from('delivery_records')
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
@@ -109,8 +110,8 @@ export const getDeliveryRecords = async (): Promise<DeliveryRecord[]> => {
 
 export const deleteDeliveryRecord = async (id: string): Promise<{ success: boolean; error?: string }> => {
   try {
-    const { error } = await supabase
-      .from('delivery_records' as any)
+    const { error } = await (supabase as any)
+      .from('delivery_records')
       .delete()
       .eq('id', id);
 

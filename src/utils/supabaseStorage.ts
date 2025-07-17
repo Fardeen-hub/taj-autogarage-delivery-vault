@@ -28,7 +28,7 @@ export const saveDeliveryRecord = async (record: Omit<DeliveryRecord, 'id' | 'cr
     }
 
     const { data, error } = await supabase
-      .from('delivery_records')
+      .from('delivery_records' as any)
       .insert([
         {
           bike_number: record.bikeNumber,
@@ -71,7 +71,7 @@ export const getDeliveryRecords = async (): Promise<DeliveryRecord[]> => {
     }
 
     const { data, error } = await supabase
-      .from('delivery_records')
+      .from('delivery_records' as any)
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
@@ -84,7 +84,7 @@ export const getDeliveryRecords = async (): Promise<DeliveryRecord[]> => {
     if (!data) return [];
 
     // Transform database records to match our interface
-    return data.map(record => ({
+    return data.map((record: any) => ({
       id: record.id,
       bikeNumber: record.bike_number,
       chassisNumber: record.chassis_number || '',
@@ -110,7 +110,7 @@ export const getDeliveryRecords = async (): Promise<DeliveryRecord[]> => {
 export const deleteDeliveryRecord = async (id: string): Promise<{ success: boolean; error?: string }> => {
   try {
     const { error } = await supabase
-      .from('delivery_records')
+      .from('delivery_records' as any)
       .delete()
       .eq('id', id);
 

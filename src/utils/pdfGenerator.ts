@@ -193,7 +193,7 @@ export const generatePDF = async (record: DeliveryRecord): Promise<void> => {
             <strong>Aadhar Card:</strong> ${record.documents.aadhar ? '✓ Uploaded' : '✗ Missing'}
           </div>
           <div class="document-item">
-            <strong>Bank Passbook:</strong> ${record.documents.bank_passbook ? '✓ Uploaded' : '✗ Missing'}
+            <strong>Buyer Photo:</strong> ${record.documents.bank_passbook ? '✓ Uploaded' : '✗ Missing'}
           </div>
         </div>
       </div>

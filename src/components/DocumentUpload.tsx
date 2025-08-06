@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -18,7 +17,6 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onDocumentsChange }) =>
     { key: 'insurance', label: 'Insurance Document', required: true },
     { key: 'form29_30', label: 'Form 29/30', required: true },
     { key: 'aadhar', label: 'Aadhar Card', required: true },
-    { key: 'bank_passbook', label: 'Buyer Photo', required: true },
     { key: 'other_id', label: 'Other Govt ID', required: false },
   ];
 

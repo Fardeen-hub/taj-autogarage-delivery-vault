@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -7,13 +6,45 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
 
 const AuthForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login, signup } = useAuth();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const { login, loginWithGoogle, signup } = useAuth();
   const navigate = useNavigate();
+
+  const handleGoogleLogin = async () => {
+    setIsGoogleLoading(true);
+    
+    try {
+      const result = await loginWithGoogle();
+      
+      if (result.success) {
+        toast({
+          title: "Login Successful",
+          description: "Redirecting you to Gmail authentication...",
+        });
+        // The redirect will happen automatically via Supabase OAuth
+      } else {
+        toast({
+          title: "Login Failed",
+          description: result.error || "Failed to login with Google",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to login with Google. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,6 +149,25 @@ const AuthForm = () => {
           </p>
         </CardHeader>
         <CardContent>
+          {/* Google Login Button */}
+          <div className="mb-6">
+            <Button 
+              onClick={handleGoogleLogin}
+              disabled={isGoogleLoading}
+              className="w-full bg-red-600 hover:bg-red-700 text-white"
+              variant="default"
+            >
+              {isGoogleLoading ? 'Connecting to Google...' : '🔍 Continue with Gmail'}
+            </Button>
+          </div>
+
+          <div className="relative mb-6">
+            <Separator />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="bg-white px-2 text-sm text-gray-500">or</span>
+            </div>
+          </div>
+
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Login</TabsTrigger>
